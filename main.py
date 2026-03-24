@@ -1,38 +1,28 @@
 import streamlit as st
+from utils02 import get_chat_response
 
-from utils import generate_xiaohongshu
-
-
-st.header("爆款小红书AI写作助手 ✏️")
 with st.sidebar:
-    openai_api_key = st.text_input("请输入OpenAI API密钥：", type="password")
-    st.markdown("[获取OpenAI API密钥](https://platform.openai.com/account/api-keys)")
+    api_key = st.text_input("请输入OpenAI API Key：",type="password")
+    st.markdown("[获取OpenAI API key](https://platform.openai.com/account/api-keys)")
 
-theme = st.text_input("主题")
-submit = st.button("开始写作")
+st.title("💬 克隆ChatGPT")
 
-if submit and not openai_api_key:
-    st.info("请输入你的OpenAI API密钥")
-    st.stop()
-if submit and not theme:
-    st.info("请输入生成内容的主题")
-    st.stop()
-if submit:
-    with st.spinner("AI正在努力创作中，请稍等..."):
-        result = generate_xiaohongshu(theme, openai_api_key)
-    st.divider()
-    left_column, right_column = st.columns(2)
-    with left_column:
-        st.markdown("##### 小红书标题1")
-        st.write(result.titles[0])
-        st.markdown("##### 小红书标题2")
-        st.write(result.titles[1])
-        st.markdown("##### 小红书标题3")
-        st.write(result.titles[2])
-        st.markdown("##### 小红书标题4")
-        st.write(result.titles[3])
-        st.markdown("##### 小红书标题5")
-        st.write(result.titles[4])
-    with right_column:
-        st.markdown("##### 小红书正文")
-        st.write(result.content)
+if "store" not in st.session_state:
+    st.session_state["store"] = {}
+    st.session_state["messages"] = [{"role":"ai","content":"你好，我是你的AI助手，有什么可以帮你的吗？"}]
+
+for message in st.session_state["messages"]:
+    st.chat_message(message["role"]).write(message["content"])
+
+prompt = st.chat_input()
+if prompt:
+    if not api_key:
+        st.info("请输入你的OpenAI API Key")
+        st.stop()
+    st.session_state["messages"].append({"role":"human","content":prompt})
+    st.chat_message("human").write(prompt)
+    with st.spinner("AI正在思考中，请稍等..."):
+        response = get_chat_response(prompt,st.session_state["store"],"session_1",api_key)
+        print(st.session_state["store"])
+    st.session_state["messages"].append({"role":"ai","content":response})
+    st.chat_message("ai").write(response)
